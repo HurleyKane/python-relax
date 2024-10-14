@@ -1,0 +1,41 @@
+version: '3'
+services:
+  python-container:
+#    build:
+#      context: ./path_to_python_dockerfile
+    image: geodesy
+    container_name: geodesy_test
+    volumes:
+      - ./shared-scripts:/mnt/data  # 将本地文件挂载到卷
+    networks:  # 定义了一个python-relax的网络, 用于两个容器之前的沟通
+      - python-relax
+#    command: tail -f /dev/null  #改行代码是保存容器不自动关闭,无其他意义，方便进行调试
+    command: >
+      bash -c "echo 'echo This is a script from python-container' > /mnt/data/run_in_relax.sh &&
+               chmod +x /mnt/data/run_in_relax.sh"  # 在python容器中生成bash文件
+
+#    stdin_open: true  # 打开 STDIN  类似于docker exec -it container bash启动交互式
+#    tty: true  # 分配 TTY
+
+  fortran-container:
+#    build:
+#      context: ./path_to_fortran_dockerfile
+    image : relax
+    container_name: relax_test
+    volumes:
+      - ./shared-scripts:/mnt/data
+    networks:
+      - python-relax
+    depends_on:
+      - python-container  # 保证让python-container先运行
+#    command: tail -f /dev/null  #改行代码是保存容器不自动关闭,无其他意义，方便进行调试
+    command: >
+      bash -c "while [ ! -f /mnt/data/run_in_relax.sh ]; do sleep 1; done &&  # 等待bash文件存在
+               bash /mnt/data/run_in_relax.sh"  # 执行python容器生成的bash文件
+
+volumes:
+  shared-scripts:
+
+networks:
+  python-relax:
+    driver: bridge  # 可以不填自动分配

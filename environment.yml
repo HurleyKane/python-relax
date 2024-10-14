@@ -1,0 +1,10 @@
+name: geodesy
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3
+  - opencv
+  - gdal
+  - netCDF4
+  - h5netcdf

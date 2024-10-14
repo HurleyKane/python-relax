@@ -1,0 +1,13 @@
+*
+!environment.yml
+!.gitignore
+!requirements.txt
+!*.py
+!*.pyd
+!*.ipynb
+!*.md
+!Docker*
+!*/  #确保所有目录不被忽略
+/build
+/.idea
+/dist
