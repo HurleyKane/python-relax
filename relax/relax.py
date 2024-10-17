@@ -47,10 +47,6 @@ class Relax:
         self.add_fault_creep_interfaces()
         self.add_inter_seismic_strike_slip_segments()
         self.add_inter_seismic_tensile_segments()
-        # self.add_coseismic_events()
-        # self.add_coseismic_tensile_segments()
-        # self.add_coseismic_dilatation_point_sources()
-        # self.add_surface_traction()
 
     @property
     def bash_content(self):
@@ -166,6 +162,8 @@ $WDIR
         self.bash_content_dict[12] = bash_content
 
     def add_coseismic_events(self, coseismic_events:CoseismicEvents):
+        if coseismic_events is None:
+            coseismic_events = CoseismicEvents()
         self.bash_content_dict[13] = coseismic_events.bash_content
 
     def save_bash_script(self, filename:str="relax.sh"):

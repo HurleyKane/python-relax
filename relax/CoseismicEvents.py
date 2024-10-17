@@ -7,6 +7,8 @@ from geodesy.earthquake import FaultGeometry as fg
 class CoseismicEvents:
     strike_slip_segments_columns = ["no", "slip", "xs", "ys", "zs", "length", "width", "strike", "dip", "rake"]
     def __init__(self, fault_geometries:tuple[str] = ("1 1 -10 0 0 10 10 0 90 0",)):
+        if fault_geometries is None:
+            self.number_of_events = 0
         self.number_of_events = len(fault_geometries)
         self.fault_geometries = []
         for source in fault_geometries:
