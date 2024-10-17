@@ -1,9 +1,8 @@
-# 该库对C++进行
 # 安装 python setup.py bdist_wheel
 # pip install dist/InSARlib-0.0.5-py3-none-any.whl
 import setuptools
 
-VERSION = '0.0.5'
+VERSION = '0.0.0'
 package_name = f"python-relax"
 
 with open("requirements.txt", "r") as f:
@@ -27,6 +26,5 @@ setuptools.setup(
     setup_requires=[
     ], # 用于指定在构建或安装项目之前所需要的依赖项。这些依赖通常是为了支持 setup.py 的运行，或者是构建包的工具依赖
     extras_require={
-        "conda" : ["opencv", "gdal"], # 用于 opencv 的依赖
     },
 )
