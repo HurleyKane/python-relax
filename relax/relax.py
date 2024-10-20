@@ -5,7 +5,6 @@ import utm
 import subprocess
 import pandas as pd
 import numpy as np
-from sympy import content
 
 from CoseismicEvents import CoseismicEvents
 
@@ -44,6 +43,7 @@ class Relax:
         self.output_str = output_str
         self._bash_content = None
         self._init_parameters()  # 初始化参数
+        self._bash_calculate_results = "../results"
 
     parameters = {
         0 : {True:"""--no-proj-output """, False:""""""},
@@ -254,9 +254,18 @@ $WDIR
         self.bash_content_dict[13] = coseismic_events.bash_content
         return coseismic_events
 
+    @property
+    def bash_calculate_result_path(self):
+        return os.path.abspath(self._bash_calculate_results)
+
+    @bash_calculate_result_path.setter
+    def bash_calculate_result_path(self, path:str):
+        self._bash_calculate_results = path
+
     def save_bash_script(self, filename:str="relax.sh"):
-        self.bash_content_dict[0] = f"""!/bin/bash {filename.split(".")[-2]}
-WDIR=$(basename "$0" .sh)
+        WDIR = os.path.join(self.bash_calculate_result_path, filename.split("/")[-1])
+        self.bash_content_dict[0] = f"""!/bin/bash
+WDIR="{WDIR}"
 
 if [ ! -e $WDIR ]; then
 	echo adding directory $WDIR
@@ -269,13 +278,14 @@ OMP_NUM_THREADS={os.cpu_count()} relax {self.output_str} <<EOF | tee $WDIR/in.pa
             f.write(self.bash_content)
 
     def run_bash_script(self, filename:str="relax.sh"):
-        self.bash_content_dict[0] = f"""!/bin/bash {filename.split(".")[-2]}
-        WDIR=$(basename "$0" .sh)
+        WDIR = os.path.join(self.bash_calculate_result_path, filename.split("/")[-1])
+        self.bash_content_dict[0] = f"""!/bin/bash
+WDIR="{WDIR}"
 
-        if [ ! -e $WDIR ]; then
-        	echo adding directory $WDIR
-        	mkdir $WDIR
-        fi
+if [ ! -e $WDIR ]; then
+	echo adding directory $WDIR
+	mkdir $WDIR
+fi
 
         OMP_NUM_THREADS={os.cpu_count()} relax {self.output_str} <<EOF | tee $WDIR/in.param
         """
@@ -294,4 +304,4 @@ if __name__ == "__main__":
     relax.add_fault_creep_interfaces(fault_creep_interfaces="1 0 0.3 1e3 0.6 0", afterslip_planes="1 -10 0 11 10 10 0 90 0")
     relax.add_coseismic_event(
         strike_slip_segments="0 1 2 3 4 5 6 7 8 9 0\n 1 2 3 4 5 6 7 8 9 0")
-    relax.save_bash_script("../results/relax.sh")
+    relax.save_bash_script("../execulator/relax.sh")
