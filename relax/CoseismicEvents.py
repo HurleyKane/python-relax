@@ -6,14 +6,12 @@ from geodesy.earthquake import FaultGeometry as fg
 
 class CoseismicEvents:
     strike_slip_segments_columns = ["no", "slip", "xs", "ys", "zs", "length", "width", "strike", "dip", "rake"]
-    def __init__(self, fault_geometries:tuple[str] = ("1 1 -10 0 0 10 10 0 90 0",)):
-        if fault_geometries is None:
-            self.number_of_events = 0
-        self.number_of_events = len(fault_geometries)
-        self.fault_geometries = []
-        for source in fault_geometries:
-            fault_geometry = fg.read_from_csv(source, delimiter=" ")
-            self.fault_geometries.append(fault_geometry)
+    def __init__(self, strike_slip_segments:str):
+        """
+        - fault_geometries = ("1 1 -10 0 0 10 10 0 90 0",) or segments.txt
+        """
+        self.number_of_events = 1
+        self.fault_geometry : FaultGeometry = fg.read_from_csv(strike_slip_segments, delimiter=" ")
         self.bash_content = self.get_bash_content()
 
     def get_bash_content(self):
@@ -27,11 +25,13 @@ class CoseismicEvents:
         bash_content = f"""# number of coseismic events
 {self.number_of_events}
 """
-        def add_segment(num, fault_geometry:FaultGeometry):
+        def add_segment(fault_geometry:FaultGeometry):
             output = StringIO()
             if fault_geometry.ndim == 1:
+                num = 1
                 np.savetxt(output, fault_geometry.values.reshape(1, -1), fmt="%.2f")
             else:
+                num = fault_geometry.shape[0]
                 np.savetxt(output, fault_geometry.values, fmt="%.2f")
             part = f"""# number of coseismic strike-slip segments
 {num}
@@ -39,8 +39,7 @@ class CoseismicEvents:
 {output.getvalue()}"""
             return part
 
-        for index, fault_geometry in enumerate(self.fault_geometries):
-            bash_content += add_segment(index, fault_geometry)
+        bash_content += add_segment(self.fault_geometry)
         return bash_content
 
     def _add_coseismic_tensile_segments(self, num=0):
@@ -59,3 +58,6 @@ EOF
 """
         return bash_content
 
+if __name__ == "__main__":
+    ce = CoseismicEvents("1 1 -10 0 0 10 10 0 90 0")
+    ce.get_bash_content()
