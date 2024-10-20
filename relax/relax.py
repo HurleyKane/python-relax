@@ -294,4 +294,4 @@ if __name__ == "__main__":
     relax.add_fault_creep_interfaces(fault_creep_interfaces="1 0 0.3 1e3 0.6 0", afterslip_planes="1 -10 0 11 10 10 0 90 0")
     relax.add_coseismic_event(
         strike_slip_segments="0 1 2 3 4 5 6 7 8 9 0\n 1 2 3 4 5 6 7 8 9 0")
-    relax.save_bash_script("../results/relax.sh")
+    relax.save_bash_script("../execulator/relax.sh")
