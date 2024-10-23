@@ -6,7 +6,8 @@ import subprocess
 import pandas as pd
 import numpy as np
 
-from CoseismicEvents import CoseismicEvents
+
+from relax.core.CoseismicEvents import CoseismicEvents
 
 def get_df_stringio_str(data:pd.DataFrame or StringIO or str):
     if isinstance(data, pd.DataFrame):
@@ -43,7 +44,8 @@ class Relax:
         self.output_str = output_str
         self._bash_content = None
         self._init_parameters()  # 初始化参数
-        self._bash_calculate_results = "../results"
+        from relax.config import get_rootPath
+        self._bash_calculate_results = os.path.join(get_rootPath(), "results")
 
     parameters = {
         0 : {True:"""--no-proj-output """, False:""""""},
@@ -67,8 +69,8 @@ class Relax:
     @property
     def bash_content(self):
         self._bash_content = """"""
-        for key in sorted(relax.bash_content_dict.keys()):
-            self._bash_content += relax.bash_content_dict[key]
+        for key in sorted(self.bash_content_dict.keys()):
+            self._bash_content += self.bash_content_dict[key]
         return self._bash_content
 
     def add_grid_model(
@@ -114,8 +116,15 @@ $WDIR
 """
         self.bash_content_dict[1] = bash_content
 
+    def load_crust_parameters(self, lat, lon):
+        from crust import crust_data
+        result = crust_data[lat, lon]
+
+        return True
+
     def add_elastic_parameter(self, lambda_param, mu_param, gamma):
         """
+        units: MPa
         - gamma = (1 - nu) rho g  # 其中 nu为泊松比, rho为密度，g为重力加速度
         - mu : shear modulus 剪切模量
         - lambda_para : 第一拉梅常数
@@ -249,10 +258,18 @@ $WDIR
 """
         self.bash_content_dict[12] = bash_content
 
-    def add_coseismic_event(self, strike_slip_segments:str):
-        coseismic_events = CoseismicEvents(strike_slip_segments=strike_slip_segments)
-        self.bash_content_dict[13] = coseismic_events.bash_content
-        return coseismic_events
+    def add_coseismic_event(self, strike_slip_segments: pd.DataFrame or StringIO or str=None):
+        if strike_slip_segments is None:
+            bash_content =  f"""# number of events\n{1}\n"""
+        else:
+            num, content = get_df_stringio_str(data=strike_slip_segments)
+            bash_content = f"""# number of events\n{1}
+# number of coseismic strike-slip segments\n{num}
+# n     slip       xs       ys       zs  length   width strike   dip   rake
+{content}
+"""
+        coseismic_events = CoseismicEvents()
+        self.bash_content_dict[13] = bash_content + coseismic_events.bash_content
 
     @property
     def bash_calculate_result_path(self):
@@ -263,7 +280,7 @@ $WDIR
         self._bash_calculate_results = path
 
     def save_bash_script(self, filename:str="relax.sh"):
-        WDIR = os.path.join(self.bash_calculate_result_path, filename.split("/")[-1])
+        WDIR = os.path.join(self.bash_calculate_result_path, filename.split("/")[-1].split(".")[-2])
         self.bash_content_dict[0] = f"""!/bin/bash
 WDIR="{WDIR}"
 
@@ -304,4 +321,4 @@ if __name__ == "__main__":
     relax.add_fault_creep_interfaces(fault_creep_interfaces="1 0 0.3 1e3 0.6 0", afterslip_planes="1 -10 0 11 10 10 0 90 0")
     relax.add_coseismic_event(
         strike_slip_segments="0 1 2 3 4 5 6 7 8 9 0\n 1 2 3 4 5 6 7 8 9 0")
-    relax.save_bash_script("../execulator/relax.sh")
+    relax.save_bash_script("execulator/relax.sh")

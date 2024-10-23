@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3
-  - opencv
-  - gdal
+  - gdal  # for reading netcdf
+  - xarray
   - netCDF4
   - h5netcdf
