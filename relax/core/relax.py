@@ -12,15 +12,28 @@ from relax.core.CoseismicEvents import CoseismicEvents
 def get_df_stringio_str(data:pd.DataFrame or StringIO or str):
     if isinstance(data, pd.DataFrame):
         content = StringIO()
-        np.savetxt(content, data, fmt="%.3f", delimiter=" ")
+        data["no"] = data["no"].astype(int)
+        data.to_csv(content, index=False, header=False, sep=" ")
         content = content.getvalue()
+        content = content.replace("\r", "")
+        lines = [line for line in content.split("\n") if line.strip()]
+        num = len(lines)
     elif isinstance(data, StringIO):
         content = data.getvalue()
+        lines = [line for line in content.split("\n") if line.strip()]
+        num = len(lines)
     elif isinstance(data, str):
-        content = data
+        if data.endswith(".flt"):
+            FLT = data
+            num = f"""`grep -v "#" {FLT} | wc | awk """ + """'{print $1}'`"""
+            content = f"""`grep -v "#" {FLT}`
+"""
+        else:
+            content = data
+            lines = [line for line in content.split("\n") if line.strip()]
+            num = len(lines)
     else:
         raise TypeError
-    num = len(content.split("\n"))
     return num, content
 
 class Relax:
@@ -116,23 +129,17 @@ $WDIR
 """
         self.bash_content_dict[1] = bash_content
 
-    def load_crust_parameters(self, lat, lon):
-        from crust import crust_data
-        result = crust_data[lat, lon]
-
-        return True
-
     def add_elastic_parameter(self, lambda_param, mu_param, gamma):
         """
         units: MPa
-        - gamma = (1 - nu) rho g  # 其中 nu为泊松比, rho为密度，g为重力加速度
-        - mu : shear modulus 剪切模量
-        - lambda_para : 第一拉梅常数
+        - gamma = (1 - nu) rho g (unit: 1/m) # 其中 nu为泊松比, rho为密度，g为重力加速度
+        - mu : shear modulus 剪切模量 (unit:MPa)
+        - lambda_para : 第一拉梅常数 (unit:MPa)
         - 即，未知量为第一拉梅常数、剪切模量和泊松比。密度和重力加速度需要根据当地情况进行了解
         for example : lambda_param = 3e4, mu_param=3e4, gamma=8.33e-4
         """
         bash_content = f"""# lambda (MPa), mu (MPa), gamma (1/km)  
-{lambda_param} {mu_param} {gamma}  
+{lambda_param:.4e} {mu_param:.4e} {gamma:.4e}  
 """
         self.bash_content_dict[2] = bash_content
 
@@ -183,7 +190,7 @@ $WDIR
         if segments is None:
             num = 0
             bash_content = f"""# number of stress observation points\n{num}
-        """
+"""
         else:
             num, content = get_df_stringio_str(data=segments)
             bash_content = f"""# number of stress observation segments\n{num}
@@ -266,8 +273,7 @@ $WDIR
             bash_content = f"""# number of events\n{1}
 # number of coseismic strike-slip segments\n{num}
 # n     slip       xs       ys       zs  length   width strike   dip   rake
-{content}
-"""
+{content}"""
         coseismic_events = CoseismicEvents()
         self.bash_content_dict[13] = bash_content + coseismic_events.bash_content
 

@@ -1,4 +1,3 @@
-docker
 numpy
 pandas
 git+https://github.com/HurleyKane/geodesy.git

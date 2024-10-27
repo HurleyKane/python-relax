@@ -1,7 +1,7 @@
 import numpy as np
 from io import StringIO
 
-from geodesy import FaultGeometry
+from geodesy.earthquake import FaultGeometry
 from geodesy.earthquake import FaultGeometry as fg
 
 class CoseismicEvents:

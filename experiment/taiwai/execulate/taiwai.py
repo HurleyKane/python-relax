@@ -1,15 +1,3 @@
-# python-relax - Python bindings for relax
-
-## 可选依赖
-本项目通过python对relax进行调用，生成crust的脚本，运行crust的脚本，并返回结果。
-注：运行crust脚本，需要配置relax软件的基本环境，如只需要生成relax的bash脚本，则不需要配置 relax 的环境。
-## python环境配置
-```angular2html
-pip install -r requirements.txt
-```
-## 使用说明
-使用实例见relax中的examples中的taiwan地震的fault文件夹chichi.flt
-```python
 from crust import crust_data
 from relax import Relax
 from scipy.constants import g
@@ -31,7 +19,3 @@ relax_model.add_coseismic_event(strike_slip_segments=faultgeo)
 relax_model.bash_calculate_result_path = "../results"
 relax_model.save_bash_script(filename="./coseismic.sh")
 print(relax_model.bash_content)
-
-# 需要配置relax环境
-relax_model.run_bash_script(filename="./coseismic.sh")
-```
